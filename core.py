@@ -7,7 +7,7 @@ from selenium import webdriver
 from pyautogui import hotkey, typewrite
 
 os.system("cls")
-input("Do NOT use your PC while this tool is running or else it might break\nPress ENTER to continue\n")
+input("\nDo NOT use your PC while this tool is running or else it might break.\n\nPress ENTER to continue\n")
 os.system("cls")
 
 # constants, nothing to change except for DRIVER if using a different one, untested
@@ -28,11 +28,11 @@ SLEEP = 0.2
 
 # Don't clutter the working directory, make temporary ones
 try:
-    os.mkdir(PATH_TEMP)
+    os.mkdir(PATH_OUTPUT)
 except FileExistsError:
     pass
 finally:
-    os.mkdir(PATH_OUTPUT)
+    os.mkdir(PATH_TEMP)
 
 urls = {
     "iPhone 13 Pro Max 256 GB" : {
@@ -253,21 +253,22 @@ for k1 in urls.keys():
             hotkey('tab')
         sleep(SLEEP)
         hotkey('enter')
+        sleep(SLEEP)
         name = name[:-1]
         times += 1
-        print(f"times = {times}")
+        print(f"{times} ready")
 
-print(entries)
-print(f"1/2 DONE | times = {times}")
+print("\n", entries)
+print(f"\nAll files obtained, proceeding...")
 
 headers = list(urls.keys())
 done, header = 0, 0
 while True:
     if times != 90:
         sleep(5) # Preserve resources by delaying another iteration
-        print("delaying...")
+        print("\nDelaying the script...")
     else:
-        print("preparing...")
+        print("\nPreparing the output...")
         sleep(3) # Make sure the code below isn't run before last file is saved
         with open(PATH_OUTPUT + "\Prices.txt", "w") as cost:
             cost.write(f"{headers[done]}:\n")
@@ -295,6 +296,8 @@ while True:
                     cost.write(f"    {abc[done]} : {result}\n")
                 done += 1
         if done == 90:
-            print("done")
+            print("\nFinished, cleaning up...")
             rmtree(PATH_TEMP) # Remove our temporary files to free up space
             break
+
+print(f"\nOperation complete, output located in {PATH_OUTPUT}")
