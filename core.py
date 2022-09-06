@@ -6,8 +6,18 @@ from datetime import datetime
 from selenium import webdriver
 from pyautogui import hotkey, typewrite
 
+NAME = "Webpage Content Fetcher"
+VERSION = "Release 1.0"
+AUTHOR = "GitHub : MarcusPy"
+
+WELCOME = f"""===========================
+| {NAME} |\n| {AUTHOR}       |\n| {VERSION}             |
+===========================
+"""
+
 os.system("cls")
-input("\nDo NOT use your PC while this tool is running or else it might break.\n\nPress ENTER to continue\n")
+print(WELCOME)
+input("\nDo Not Touch Anything While The Tool Is Working, Press ENTER To Continue ")
 os.system("cls")
 
 # constants, nothing to change except for DRIVER if using a different one, untested
@@ -16,17 +26,26 @@ CURRENTLY = NOW.strftime("%d-%b-%Y-%I;%M%p")
 PATH_TEMP = os.path.dirname(__file__) + "\_temp"
 PATH_TEMP_NEW = PATH_TEMP + "\\"
 PATH_OUTPUT = os.path.dirname(__file__) + f"\{CURRENTLY}"
-PATH_DRIVER = os.path.dirname(__file__) + "\msedgedriver"
-DRIVER = webdriver.Edge(executable_path=PATH_DRIVER)
 
 # RegEx that works perfectly
 P1 = r"\n\s{14}([0-9]{1}&nbsp;[0-9]{3}&nbsp;K=C4=8D)"
 P2 = r"\n\s{14}([0-9]{2}&nbsp;[0-9]{3}&nbsp;K=C4=8D)"
 
 # Default delay between pyautogui actions to prevent issues, adjustable
-SLEEP = 0.2
+# Increase as needed if your PC is slow and you're experiencing file saving bugs
+SLEEP = 0.3
 
-# Don't clutter the working directory, make temporary ones
+def logger(*data):
+    for _ in range(len(data)):
+        print(f"> {data[_]}")
+
+    with open(PATH_OUTPUT + "\log.txt", "a") as log:
+        now = datetime.now()
+        now = now.strftime(f"[%Hh:%Mm:%Ss] : ")
+        for _ in range(len(data)):
+            log.write(f"{now}{data[_]}\n")
+
+# Don't clutter the working directory, make a temporary one
 try:
     os.mkdir(PATH_OUTPUT)
 except FileExistsError:
@@ -187,104 +206,165 @@ urls = {
     }
 }
 
+PHONES = len(urls.keys()) * 3
+
+links = []
 with open(PATH_OUTPUT + "\Links.txt", "w") as link:
     for k1 in urls.keys():
         link.write(f"{k1}:\n")
         for k2, v2 in urls[k1].items():
+            links.append(v2)
             if k2 == "C":
                 link.write(f"    {k2} : {v2}\n\n")
             else:
                 link.write(f"    {k2} : {v2}\n")
 
 abc, entries = [], []
-times = 0
-name = ""
-for k1 in urls.keys():
-    name = k1 + " - "
-    for k2, v2 in urls[k1].items():
-        name += k2
-        entries.append(name)
-        abc.append(k2)
-        DRIVER.get(v2)
-        sleep(1)
-        hotkey('ctrl', 's')
-        sleep(SLEEP)
-        typewrite(name)
-        if times == 0: # Needed only once so that OS remembers last choices
+def downloader(retry:str=""):
+    PATH_DRIVER = os.path.dirname(__file__) + "\msedgedriver"
+    DRIVER = webdriver.Edge(executable_path=PATH_DRIVER)
+    times = 0
+    name = ""
+    for k1 in urls.keys():
+        name = k1 + " - "
+        for k2, v2 in urls[k1].items():
+            name += k2
+            if len(retry) > 0:
+                logger("Retrying To Download")
+                DRIVER.get(retry)
+                name = NOW.strftime("%f")
+                _name = name
+            else:
+                DRIVER.get(v2)
+                entries.append(name)
+                abc.append(k2)
+                _name = name
+            sleep(1)
+            hotkey('ctrl', 's')
             sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('right')
-            sleep(SLEEP)
-            hotkey('pageup')
-            sleep(SLEEP)
-            hotkey('w')
+            typewrite(name)
+            if times == 0: # Needed only once so that OS remembers last choices
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('right')
+                sleep(SLEEP)
+                hotkey('pageup')
+                sleep(SLEEP)
+                hotkey('w')
+                sleep(SLEEP)
+                hotkey('enter')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('enter')
+                sleep(SLEEP)
+                typewrite(PATH_TEMP)
+                sleep(SLEEP)
+                hotkey('enter')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
+                sleep(SLEEP)
+                hotkey('tab')
             sleep(SLEEP)
             hotkey('enter')
             sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('enter')
-            sleep(SLEEP)
-            typewrite(PATH_TEMP)
-            sleep(SLEEP)
-            hotkey('enter')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-            sleep(SLEEP)
-            hotkey('tab')
-        sleep(SLEEP)
-        hotkey('enter')
-        sleep(SLEEP)
-        name = name[:-1]
-        times += 1
-        print(f"{times} ready")
+            if len(retry) > 0:
+                return _name
+            name = name[:-1]
+            times += 1
+            logger(f"{times} Files Acquired")
+            
+    return times
 
-print("\n", entries)
-print(f"\nAll files obtained, proceeding...")
+times = downloader()
+
+def redownloader():
+    broken = entries.index(_)
+    retry = links[broken]
+    logger(f"Link: {retry}")
+    _name = downloader(retry=retry)
+    _name = PATH_TEMP_NEW + _name + ".mhtml"
+    with open(_name, "r") as retried:
+        _data = retried.read()
+        _found = findall(P2, _data)
+        if len(_found) == 0:
+            _found = findall(P1, _data)
+        if len(_found) > 1:
+            result = f"Error: {_found} | Might require manual check"
+            result = result.replace("&nbsp;", " ")
+            result = result.replace("K=C4=8D", "")
+        else:
+            result = _found[0]
+            result = result.replace("&nbsp;", " ", 1)
+            result = result.replace("&nbsp;K=C4=8D", "")
+    
+    return result
+
+def finder(temp_name, file_name):
+    try:
+        with open(temp_name, "r") as temp:
+            data = temp.read()
+            found = findall(P2, data)
+            if len(found) == 0:
+                found = findall(P1, data)
+            if len(found) > 1:
+                # given it's very unlikely to occur, it should probably be looked at
+                result = f"Error: {found} | Might require manual check"
+                result = result.replace("&nbsp;", " ")
+                result = result.replace("K=C4=8D", "")
+            elif len(found) == 0:
+                logger(f"File Not Found: {file_name}")
+                result = redownloader()
+            elif len(found) == 1:
+                result = found[0]
+                result = result.replace("&nbsp;", " ", 1)
+                result = result.replace("&nbsp;K=C4=8D", "")
+    except FileNotFoundError:
+        logger(f"File Not Found: {file_name}")
+        result = redownloader()
+    
+    return result
+
+logger(entries)
+logger(f"Download Of {times} Files Complete")
+
+#input("Debug Pause ")
 
 headers = list(urls.keys())
 done, header = 0, 0
 while True:
-    if times != 90:
+    if times != PHONES:
         sleep(5) # Preserve resources by delaying another iteration
-        print("\nDelaying the script...")
+        logger("Delaying The Script...")
     else:
-        print("\nPreparing the output...")
+        logger("Analyzing...")
         sleep(3) # Make sure the code below isn't run before last file is saved
         with open(PATH_OUTPUT + "\Prices.txt", "w") as cost:
             cost.write(f"{headers[done]}:\n")
             header += 1
             for _ in entries:
+                file_name = f"'{_}.mhtml'"
                 temp_name = PATH_TEMP_NEW + _ + ".mhtml"
-                with open(temp_name, "r") as temp:
-                    data = temp.read()
-                    found = findall(P2, data)
-                    if len(found) == 0:
-                        found = findall(P1, data)
-                    if len(found) > 1:
-                        raise Exception(f"File {temp_name} has more than 1 valid record: {found}")
-                    result = found[0]
-                    result = result.replace("&nbsp;", " ", 1)
-                    result = result.replace("&nbsp;K=C4=8D", "")
+                result = finder(temp_name, file_name)
                 if abc[done] == "C":
                     cost.write(f"    {abc[done]} : {result}\n\n")
                     try:
@@ -295,9 +375,9 @@ while True:
                 else:
                     cost.write(f"    {abc[done]} : {result}\n")
                 done += 1
-        if done == 90:
-            print("\nFinished, cleaning up...")
+        if done == PHONES:
+            logger("Removing Temp Files...")
             rmtree(PATH_TEMP) # Remove our temporary files to free up space
             break
 
-print(f"\nOperation complete, output located in {PATH_OUTPUT}")
+logger(f"Operation Successful, Output Located In {PATH_OUTPUT}")
